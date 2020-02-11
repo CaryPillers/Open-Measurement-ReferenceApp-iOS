@@ -130,7 +130,11 @@ class BaseAdUnitViewController: UIViewController {
         //This is the point where other impression trackers (ad server impression, etc) should fire
 
         startMeasurement()
-
+        
+        // Create the VolumeView (hidden) to get volume notifications
+        let volumeView = MPVolumeView(frame: view.bounds)
+        volumeView.isHidden = true
+        view.addSubview(volumeView)
     }
 
     /**

@@ -53,6 +53,9 @@ class VideoViewController: BaseAdUnitViewController {
     override func willPresentAd() {
         super.willPresentAd()
 
+        // Add volume observer to get system volume changes even if a WebView
+        NotificationCenter.default.addObserver(self, selector: #selector(volumeChanged(notification:)), name: NSNotification.Name(rawValue: "AVSystemController_SystemVolumeDidChangeNotification"), object: nil)
+        
         //Report VAST properties to OMID
         //The values should be parsed from the VAST document
         let VASTProperties = OMIDDemobuildVASTProperties(autoPlay: true, position: .standalone)
@@ -69,6 +72,9 @@ class VideoViewController: BaseAdUnitViewController {
         videoPlayerLayer.player = nil
         videoPlayerLayer.removeFromSuperlayer()
         try? FileManager.default.removeItem(at: localAssetURL)
+        
+        //Remove the volume observer as its not needed once the ad is destroyed
+        NotificationCenter.default.removeObserver(self)
     }
 
     override func presentAd() {
@@ -132,6 +138,14 @@ class VideoViewController: BaseAdUnitViewController {
         } catch {
             fatalError("Unable to instantiate video ad events")
         }
+    }
+    
+    @objc func volumeChanged(notification: NSNotification) {
+        let volume = notification.userInfo!["AVSystemController_AudioVolumeNotificationParameter"] as! CGFloat
+        setPlayerVolume (volume: volume)
+        
+        print("Volume changed \(playerVolume())")
+        
     }
 }
 
@@ -268,6 +282,17 @@ extension VideoViewController {
         }
 
         return CGFloat(player.volume)
+    }
+    
+    func setPlayerVolume(volume: CGFloat) {
+        guard let player = player else {
+            return
+        }
+        
+        if (!player.isMuted) {
+            player.volume = Float(volume)
+            omidVideoEvents?.volumeChange(to: volume)
+        }
     }
 }
 
