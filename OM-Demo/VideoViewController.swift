@@ -143,9 +143,6 @@ class VideoViewController: BaseAdUnitViewController {
     @objc func volumeChanged(notification: NSNotification) {
         let volume = notification.userInfo!["AVSystemController_AudioVolumeNotificationParameter"] as! CGFloat
         setPlayerVolume (volume: volume)
-        
-        print("Volume changed \(playerVolume())")
-        
     }
 }
 
