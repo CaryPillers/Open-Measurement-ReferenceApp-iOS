@@ -53,8 +53,10 @@ class VideoViewController: BaseAdUnitViewController {
     override func willPresentAd() {
         super.willPresentAd()
 
-        // Add volume observer to get system volume changes even if a WebView
-        NotificationCenter.default.addObserver(self, selector: #selector(volumeChanged(notification:)), name: NSNotification.Name(rawValue: "AVSystemController_SystemVolumeDidChangeNotification"), object: nil)
+        // Add volume observer to get system volume changes
+        let audioSession = AVAudioSession.sharedInstance()
+        audioSession.addObserver(self, forKeyPath: "outputVolume",
+                                     options: NSKeyValueObservingOptions.new, context: nil)
         
         //Report VAST properties to OMID
         //The values should be parsed from the VAST document
@@ -140,9 +142,12 @@ class VideoViewController: BaseAdUnitViewController {
         }
     }
     
-    @objc func volumeChanged(notification: NSNotification) {
-        let volume = notification.userInfo!["AVSystemController_AudioVolumeNotificationParameter"] as! CGFloat
-        setPlayerVolume (volume: volume)
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        if keyPath == "outputVolume" {
+            let audioSession = AVAudioSession.sharedInstance()
+            let volume = audioSession.outputVolume
+            setPlayerVolume (volume: CGFloat(volume))
+        }
     }
 }
 
